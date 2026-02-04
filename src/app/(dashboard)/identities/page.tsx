@@ -5,18 +5,45 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
-import type { Identity, PaginatedResponse } from "@/types";
+import type { Identity, PaginatedResponse, Tenant } from "@/types";
 import { formatDate, truncateEmail } from "@/lib/utils";
+
+const ROLE_OPTIONS = [
+  { value: "", label: "Tum Roller" },
+  { value: "OWNER", label: "Owner" },
+  { value: "ADMIN", label: "Admin" },
+  { value: "MANAGER", label: "Manager" },
+  { value: "MEMBER", label: "Member" },
+];
 
 export default function IdentitiesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [data, setData] = useState<PaginatedResponse<Identity> | null>(null);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [roleFilter, setRoleFilter] = useState("");
+  const [tenantFilter, setTenantFilter] = useState("");
+
+  // Fetch tenants for filter dropdown
+  useEffect(() => {
+    async function fetchTenants() {
+      try {
+        const response = await fetch("/api/tenants?pageSize=100");
+        if (response.ok) {
+          const result = await response.json();
+          setTenants(result.data || []);
+        }
+      } catch (error) {
+        console.error("Fetch tenants error:", error);
+      }
+    }
+    fetchTenants();
+  }, []);
 
   // Check for action param
   useEffect(() => {
@@ -32,6 +59,8 @@ export default function IdentitiesPage() {
       params.set("page", String(page));
       params.set("pageSize", "10");
       if (search) params.set("search", search);
+      if (roleFilter) params.set("globalRole", roleFilter);
+      if (tenantFilter) params.set("tenantId", tenantFilter);
 
       const filter = searchParams.get("filter");
       if (filter === "locked") {
@@ -48,7 +77,7 @@ export default function IdentitiesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, searchParams]);
+  }, [page, search, searchParams, roleFilter, tenantFilter]);
 
   useEffect(() => {
     fetchData();
@@ -66,6 +95,15 @@ export default function IdentitiesPage() {
       }
     } catch (error) {
       console.error("Delete error:", error);
+    }
+  };
+
+  const getRoleBadgeVariant = (role: string): "default" | "success" | "warning" | "danger" => {
+    switch (role) {
+      case "OWNER": return "danger";
+      case "ADMIN": return "warning";
+      case "MANAGER": return "success";
+      default: return "default";
     }
   };
 
@@ -87,6 +125,37 @@ export default function IdentitiesPage() {
       render: (item) => item.name || "-",
     },
     {
+      key: "highestRole",
+      label: "Rol",
+      render: (item) => {
+        const role = (item as Identity & { highestRole?: string }).highestRole;
+        return role ? (
+          <Badge variant={getRoleBadgeVariant(role)}>{role}</Badge>
+        ) : (
+          <span className="text-gray-400">-</span>
+        );
+      },
+    },
+    {
+      key: "tenants",
+      label: "Isletmeler",
+      mobileHidden: true,
+      render: (item) => {
+        const tenantList = (item as Identity & { tenants?: { name: string }[] }).tenants;
+        if (!tenantList || tenantList.length === 0) {
+          return <span className="text-gray-400">-</span>;
+        }
+        if (tenantList.length === 1) {
+          return <span className="text-sm">{tenantList[0].name}</span>;
+        }
+        return (
+          <span className="text-sm" title={tenantList.map(t => t.name).join(", ")}>
+            {tenantList[0].name} +{tenantList.length - 1}
+          </span>
+        );
+      },
+    },
+    {
       key: "status",
       label: "Durum",
       render: (item) => (
@@ -100,17 +169,6 @@ export default function IdentitiesPage() {
           )}
         </div>
       ),
-    },
-    {
-      key: "emailVerified",
-      label: "Email Onay",
-      mobileHidden: true,
-      render: (item) =>
-        item.emailVerified ? (
-          <Badge variant="success">Onaylandi</Badge>
-        ) : (
-          <Badge variant="default">Bekliyor</Badge>
-        ),
     },
     {
       key: "lastLoginAt",
@@ -136,6 +194,63 @@ export default function IdentitiesPage() {
         >
           Yeni Kullanici
         </button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4">
+        <div className="flex-1 min-w-[200px] max-w-[250px]">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Rol
+          </label>
+          <select
+            value={roleFilter}
+            onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setPage(1);
+            }}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            {ROLE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex-1 min-w-[200px] max-w-[250px]">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Isletme
+          </label>
+          <select
+            value={tenantFilter}
+            onChange={(e) => {
+              setTenantFilter(e.target.value);
+              setPage(1);
+            }}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            <option value="">Tum Isletmeler</option>
+            {tenants.map((tenant) => (
+              <option key={tenant.id} value={tenant.id}>
+                {tenant.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {(roleFilter || tenantFilter) && (
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setRoleFilter("");
+                setTenantFilter("");
+                setPage(1);
+              }}
+              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              Filtreleri Temizle
+            </button>
+          </div>
+        )}
       </div>
 
       <DataTable
