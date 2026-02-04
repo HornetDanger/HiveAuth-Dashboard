@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 const HIVEAUTH_API_URL = process.env.HIVEAUTH_API_URL;
+const HIVEAUTH_API_PREFIX = "/api/v1";
 const HIVEAUTH_APP_SECRET = process.env.HIVEAUTH_APP_SECRET;
 
 export async function GET(
@@ -17,7 +18,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const response = await fetch(`${HIVEAUTH_API_URL}/admin/tenants/${id}`, {
+    const response = await fetch(`${HIVEAUTH_API_URL}${HIVEAUTH_API_PREFIX}/admin/tenants/${id}`, {
       headers: {
         "Content-Type": "application/json",
         "x-app-secret": HIVEAUTH_APP_SECRET || "",
@@ -55,7 +56,7 @@ export async function PUT(
   try {
     const body = await request.json();
 
-    const response = await fetch(`${HIVEAUTH_API_URL}/admin/tenants/${id}`, {
+    const response = await fetch(`${HIVEAUTH_API_URL}${HIVEAUTH_API_PREFIX}/admin/tenants/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -92,7 +93,7 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const response = await fetch(`${HIVEAUTH_API_URL}/admin/tenants/${id}`, {
+    const response = await fetch(`${HIVEAUTH_API_URL}${HIVEAUTH_API_PREFIX}/admin/tenants/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

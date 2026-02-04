@@ -1,6 +1,7 @@
 import type { Identity, Tenant, DashboardStats, PaginatedResponse } from "@/types";
 
-const HIVEAUTH_API_URL = process.env.HIVEAUTH_API_URL || "https://hiveauth-api.onrender.com";
+const HIVEAUTH_API_URL = process.env.HIVEAUTH_API_URL || "https://hiveauth.onrender.com";
+const HIVEAUTH_API_PREFIX = "/api/v1";
 const HIVEAUTH_APP_SECRET = process.env.HIVEAUTH_APP_SECRET || "";
 
 interface FetchOptions {
@@ -12,7 +13,7 @@ interface FetchOptions {
 async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { method = "GET", body, searchParams } = options;
 
-  let url = `${HIVEAUTH_API_URL}${endpoint}`;
+  let url = `${HIVEAUTH_API_URL}${HIVEAUTH_API_PREFIX}${endpoint}`;
   if (searchParams) {
     const params = new URLSearchParams();
     Object.entries(searchParams).forEach(([key, value]) => {

@@ -9,7 +9,7 @@ async function getStats(): Promise<DashboardStats> {
     const apiUrl = process.env.HIVEAUTH_API_URL;
     const appSecret = process.env.HIVEAUTH_APP_SECRET;
 
-    const response = await fetch(`${apiUrl}/admin/stats`, {
+    const response = await fetch(`${apiUrl}/api/v1/admin/stats`, {
       headers: {
         "Content-Type": "application/json",
         "x-app-secret": appSecret || "",

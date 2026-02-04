@@ -32,7 +32,7 @@ export const authOptions: NextAuthOptions = {
         // Optionally verify against HiveAuth API
         try {
           const response = await fetch(
-            `${process.env.HIVEAUTH_API_URL}/admin/verify`,
+            `${process.env.HIVEAUTH_API_URL}/api/v1/admin/verify`,
             {
               method: "POST",
               headers: {

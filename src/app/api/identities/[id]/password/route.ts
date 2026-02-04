@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 const HIVEAUTH_API_URL = process.env.HIVEAUTH_API_URL;
+const HIVEAUTH_API_PREFIX = "/api/v1";
 const HIVEAUTH_APP_SECRET = process.env.HIVEAUTH_APP_SECRET;
 
 export async function POST(
@@ -20,7 +21,7 @@ export async function POST(
     const body = await request.json();
 
     const response = await fetch(
-      `${HIVEAUTH_API_URL}/admin/identities/${id}/password`,
+      `${HIVEAUTH_API_URL}${HIVEAUTH_API_PREFIX}/admin/identities/${id}/password`,
       {
         method: "POST",
         headers: {

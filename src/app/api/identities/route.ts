@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 const HIVEAUTH_API_URL = process.env.HIVEAUTH_API_URL;
+const HIVEAUTH_API_PREFIX = "/api/v1";
 const HIVEAUTH_APP_SECRET = process.env.HIVEAUTH_APP_SECRET;
 
 export async function GET(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const response = await fetch(
-      `${HIVEAUTH_API_URL}/admin/identities${queryString ? `?${queryString}` : ""}`,
+      `${HIVEAUTH_API_URL}${HIVEAUTH_API_PREFIX}/admin/identities${queryString ? `?${queryString}` : ""}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const response = await fetch(`${HIVEAUTH_API_URL}/admin/identities`, {
+    const response = await fetch(`${HIVEAUTH_API_URL}${HIVEAUTH_API_PREFIX}/admin/identities`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
